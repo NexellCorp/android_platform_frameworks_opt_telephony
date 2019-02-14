@@ -18,4 +18,4 @@ include $(CLEAR_VARS)
 
 # Include subdirectory makefiles
 # ============================================================
-include $(call all-makefiles-under,$(LOCAL_PATH))
+# include $(call all-makefiles-under,$(LOCAL_PATH))
