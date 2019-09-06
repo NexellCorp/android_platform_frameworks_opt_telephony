@@ -27,6 +27,8 @@ import android.telephony.Rlog;
 import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
 
+import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+
 /**
  * Generic state machine for handling messages and waiting for ordered broadcasts to complete.
  * Subclasses implement {@link #handleSmsMessage}, which returns true to transition into waiting
@@ -68,8 +70,12 @@ public abstract class WakeLockStateMachine extends StateMachine {
         mPhone = phone;
 
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, debugTag);
-        mWakeLock.acquire();    // wake lock released after we enter idle state
+        if (!QUICKBOOT) {
+            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, debugTag);
+            mWakeLock.acquire();    // wake lock released after we enter idle state
+        } else {
+            mWakeLock = null;
+        }
 
         addState(mDefaultState);
         addState(mIdleState, mDefaultState);
@@ -90,9 +96,11 @@ public abstract class WakeLockStateMachine extends StateMachine {
 
     @Override
     protected void onQuitting() {
-        // fully release the wakelock
-        while (mWakeLock.isHeld()) {
-            mWakeLock.release();
+        if (!QUICKBOOT) {
+            // fully release the wakelock
+            while (mWakeLock.isHeld()) {
+                mWakeLock.release();
+            }
         }
     }
 
@@ -143,8 +151,10 @@ public abstract class WakeLockStateMachine extends StateMachine {
 
         @Override
         public void exit() {
-            mWakeLock.acquire();
-            if (DBG) log("acquired wakelock, leaving Idle state");
+            if (!QUICKBOOT) {
+                mWakeLock.acquire();
+                if (DBG) log("acquired wakelock, leaving Idle state");
+            }
         }
 
         @Override
@@ -158,13 +168,15 @@ public abstract class WakeLockStateMachine extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKE_LOCK:
-                    mWakeLock.release();
-                    if (DBG) {
-                        if (mWakeLock.isHeld()) {
-                            // this is okay as long as we call release() for every acquire()
-                            log("mWakeLock is still held after release");
-                        } else {
-                            log("mWakeLock released");
+                    if (!QUICKBOOT) {
+                        mWakeLock.release();
+                        if (DBG) {
+                            if (mWakeLock.isHeld()) {
+                                // this is okay as long as we call release() for every acquire()
+                                log("mWakeLock is still held after release");
+                            } else {
+                                log("mWakeLock released");
+                            }
                         }
                     }
                     return HANDLED;
@@ -194,10 +206,12 @@ public abstract class WakeLockStateMachine extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKE_LOCK:
-                    mWakeLock.release();    // decrement wakelock from previous entry to Idle
-                    if (!mWakeLock.isHeld()) {
-                        // wakelock should still be held until 3 seconds after we enter Idle
-                        loge("mWakeLock released while still in WaitingState!");
+                    if (!QUICKBOOT) {
+                        mWakeLock.release();    // decrement wakelock from previous entry to Idle
+                        if (!mWakeLock.isHeld()) {
+                            // wakelock should still be held until 3 seconds after we enter Idle
+                            loge("mWakeLock released while still in WaitingState!");
+                        }
                     }
                     return HANDLED;
 

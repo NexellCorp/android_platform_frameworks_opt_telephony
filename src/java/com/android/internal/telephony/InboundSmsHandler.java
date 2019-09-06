@@ -74,6 +74,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+
 /**
  * This class broadcasts incoming SMS messages to interested apps after storing them in
  * the SmsProvider "raw" table and ACKing them to the SMSC. After each message has been
@@ -241,8 +243,12 @@ public abstract class InboundSmsHandler extends StateMachine {
                 mPhone.getPhoneId(), smsCapable);
 
         PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, name);
-        mWakeLock.acquire();    // wake lock released after we enter idle state
+        if (!QUICKBOOT) {
+            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, name);
+            mWakeLock.acquire();    // wake lock released after we enter idle state
+        } else {
+            mWakeLock = null;
+        }
         mUserManager = (UserManager) mContext.getSystemService(Context.USER_SERVICE);
         mDeviceIdleController = TelephonyComponentFactory.getInstance().getIDeviceIdleController();
 
@@ -277,8 +283,10 @@ public abstract class InboundSmsHandler extends StateMachine {
     protected void onQuitting() {
         mWapPush.dispose();
 
-        while (mWakeLock.isHeld()) {
-            mWakeLock.release();
+        if (!QUICKBOOT) {
+            while (mWakeLock.isHeld()) {
+                mWakeLock.release();
+            }
         }
     }
 
@@ -371,8 +379,10 @@ public abstract class InboundSmsHandler extends StateMachine {
 
         @Override
         public void exit() {
-            mWakeLock.acquire();
-            if (DBG) log("acquired wakelock, leaving Idle state");
+            if (!QUICKBOOT) {
+                mWakeLock.acquire();
+                if (DBG) log("acquired wakelock, leaving Idle state");
+            }
         }
 
         @Override
@@ -388,13 +398,15 @@ public abstract class InboundSmsHandler extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKELOCK:
-                    mWakeLock.release();
-                    if (DBG) {
-                        if (mWakeLock.isHeld()) {
-                            // this is okay as long as we call release() for every acquire()
-                            log("mWakeLock is still held after release");
-                        } else {
-                            log("mWakeLock released");
+                    if (!QUICKBOOT) {
+                        mWakeLock.release();
+                        if (DBG) {
+                            if (mWakeLock.isHeld()) {
+                                // this is okay as long as we call release() for every acquire()
+                                log("mWakeLock is still held after release");
+                            } else {
+                                log("mWakeLock released");
+                            }
                         }
                     }
                     return HANDLED;
@@ -467,10 +479,12 @@ public abstract class InboundSmsHandler extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKELOCK:
-                    mWakeLock.release();    // decrement wakelock from previous entry to Idle
-                    if (!mWakeLock.isHeld()) {
-                        // wakelock should still be held until 3 seconds after we enter Idle
-                        loge("mWakeLock released while delivering/broadcasting!");
+                    if (!QUICKBOOT) {
+                        mWakeLock.release();    // decrement wakelock from previous entry to Idle
+                        if (!mWakeLock.isHeld()) {
+                            // wakelock should still be held until 3 seconds after we enter Idle
+                            loge("mWakeLock released while delivering/broadcasting!");
+                        }
                     }
                     return HANDLED;
 
