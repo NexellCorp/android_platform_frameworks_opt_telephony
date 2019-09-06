@@ -119,6 +119,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+
 /**
  * RIL implementation of the CommandsInterface.
  *
@@ -456,9 +458,13 @@ public class RIL extends BaseCommands implements CommandsInterface {
         mPhoneType = RILConstants.NO_PHONE;
         mPhoneId = instanceId;
 
-        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+        if (!QUICKBOOT) {
+            ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
+                    Context.CONNECTIVITY_SERVICE);
+            mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+        } else {
+            mIsMobileNetworkSupported = false;
+        }
 
         mRadioResponse = new RadioResponse(this);
         mRadioIndication = new RadioIndication(this);

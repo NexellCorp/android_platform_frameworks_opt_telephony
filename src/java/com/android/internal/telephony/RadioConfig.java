@@ -42,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+
 /**
  * This class provides wrapper APIs for IRadioConfig interface.
  */
@@ -75,9 +77,13 @@ public class RadioConfig extends Handler {
     }
 
     private RadioConfig(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+        if (!QUICKBOOT) {
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
+                    Context.CONNECTIVITY_SERVICE);
+            mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+        } else {
+            mIsMobileNetworkSupported = false;
+        }
 
         mRadioConfigResponse = new RadioConfigResponse(this);
         mRadioConfigIndication = new RadioConfigIndication(this);
