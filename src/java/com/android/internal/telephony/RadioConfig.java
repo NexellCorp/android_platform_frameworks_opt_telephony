@@ -77,12 +77,16 @@ public class RadioConfig extends Handler {
     }
 
     private RadioConfig(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
         if (!QUICKBOOT) {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
-                    Context.CONNECTIVITY_SERVICE);
             mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
         } else {
-            mIsMobileNetworkSupported = false;
+            if (cm != null) {
+                mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+            } else {
+                mIsMobileNetworkSupported = false;
+            }
         }
 
         mRadioConfigResponse = new RadioConfigResponse(this);
