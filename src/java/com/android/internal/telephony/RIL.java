@@ -458,12 +458,15 @@ public class RIL extends BaseCommands implements CommandsInterface {
         mPhoneType = RILConstants.NO_PHONE;
         mPhoneId = instanceId;
 
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
         if (!QUICKBOOT) {
-            ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
-                    Context.CONNECTIVITY_SERVICE);
             mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
         } else {
-            mIsMobileNetworkSupported = false;
+            if (cm != null)
+                mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+            else
+                mIsMobileNetworkSupported = false;
         }
 
         mRadioResponse = new RadioResponse(this);
