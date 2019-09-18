@@ -148,11 +148,14 @@ public class PhoneSwitcher extends Handler {
         netCap.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         netCap.setNetworkSpecifier(new MatchAllNetworkSpecifier());
 
-        NetworkFactory networkFactory = new PhoneSwitcherNetworkRequestListener(looper, context,
-                netCap, this);
-        // we want to see all requests
-        networkFactory.setScoreFilter(101);
-        networkFactory.register();
+        try {
+            NetworkFactory networkFactory = new PhoneSwitcherNetworkRequestListener(looper, context,
+                    netCap, this);
+            // we want to see all requests
+            networkFactory.setScoreFilter(101);
+            networkFactory.register();
+        } catch (Exception e) {
+        }
 
         log("PhoneSwitcher started");
     }
