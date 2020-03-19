@@ -119,7 +119,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+import static com.android.internal.os.RoSystemProperties.RIL_QUICKBOOT;
 
 /**
  * RIL implementation of the CommandsInterface.
@@ -460,7 +460,7 @@ public class RIL extends BaseCommands implements CommandsInterface {
 
         ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
-        if (!QUICKBOOT) {
+        if (!RIL_QUICKBOOT) {
             mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
         } else {
             if (cm != null)

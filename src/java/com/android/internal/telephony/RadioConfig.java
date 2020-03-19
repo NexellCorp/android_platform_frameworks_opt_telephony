@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+import static com.android.internal.os.RoSystemProperties.RADIO_CONFIG_QUICKBOOT;
 
 /**
  * This class provides wrapper APIs for IRadioConfig interface.
@@ -79,7 +79,7 @@ public class RadioConfig extends Handler {
     private RadioConfig(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
-        if (!QUICKBOOT) {
+        if (!RADIO_CONFIG_QUICKBOOT) {
             mIsMobileNetworkSupported = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
         } else {
             if (cm != null) {
