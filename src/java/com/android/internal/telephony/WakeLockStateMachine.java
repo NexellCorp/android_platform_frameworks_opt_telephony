@@ -27,7 +27,7 @@ import android.telephony.Rlog;
 import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
 
-import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+import static com.android.internal.os.RoSystemProperties.WAKE_LOCK_STATE_MACHINE_QUICKBOOT;
 
 /**
  * Generic state machine for handling messages and waiting for ordered broadcasts to complete.
@@ -70,7 +70,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
         mPhone = phone;
 
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        if (!QUICKBOOT) {
+        if (!WAKE_LOCK_STATE_MACHINE_QUICKBOOT) {
             mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, debugTag);
             mWakeLock.acquire();    // wake lock released after we enter idle state
         } else {
@@ -96,7 +96,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
 
     @Override
     protected void onQuitting() {
-        if (!QUICKBOOT) {
+        if (!WAKE_LOCK_STATE_MACHINE_QUICKBOOT) {
             // fully release the wakelock
             while (mWakeLock.isHeld()) {
                 mWakeLock.release();
@@ -151,7 +151,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
 
         @Override
         public void exit() {
-            if (!QUICKBOOT) {
+            if (!WAKE_LOCK_STATE_MACHINE_QUICKBOOT) {
                 mWakeLock.acquire();
                 if (DBG) log("acquired wakelock, leaving Idle state");
             }
@@ -168,7 +168,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKE_LOCK:
-                    if (!QUICKBOOT) {
+                    if (!WAKE_LOCK_STATE_MACHINE_QUICKBOOT) {
                         mWakeLock.release();
                         if (DBG) {
                             if (mWakeLock.isHeld()) {
@@ -206,7 +206,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKE_LOCK:
-                    if (!QUICKBOOT) {
+                    if (!WAKE_LOCK_STATE_MACHINE_QUICKBOOT) {
                         mWakeLock.release();    // decrement wakelock from previous entry to Idle
                         if (!mWakeLock.isHeld()) {
                             // wakelock should still be held until 3 seconds after we enter Idle

@@ -74,7 +74,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.android.internal.os.RoSystemProperties.QUICKBOOT;
+import static com.android.internal.os.RoSystemProperties.INBOUND_SMS_HANDLER_QUICKBOOT;
 
 /**
  * This class broadcasts incoming SMS messages to interested apps after storing them in
@@ -243,7 +243,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                 mPhone.getPhoneId(), smsCapable);
 
         PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        if (!QUICKBOOT) {
+        if (!INBOUND_SMS_HANDLER_QUICKBOOT) {
             mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, name);
             mWakeLock.acquire();    // wake lock released after we enter idle state
         } else {
@@ -283,7 +283,7 @@ public abstract class InboundSmsHandler extends StateMachine {
     protected void onQuitting() {
         mWapPush.dispose();
 
-        if (!QUICKBOOT) {
+        if (!INBOUND_SMS_HANDLER_QUICKBOOT) {
             while (mWakeLock.isHeld()) {
                 mWakeLock.release();
             }
@@ -379,7 +379,7 @@ public abstract class InboundSmsHandler extends StateMachine {
 
         @Override
         public void exit() {
-            if (!QUICKBOOT) {
+            if (!INBOUND_SMS_HANDLER_QUICKBOOT) {
                 mWakeLock.acquire();
                 if (DBG) log("acquired wakelock, leaving Idle state");
             }
@@ -398,7 +398,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKELOCK:
-                    if (!QUICKBOOT) {
+                    if (!INBOUND_SMS_HANDLER_QUICKBOOT) {
                         mWakeLock.release();
                         if (DBG) {
                             if (mWakeLock.isHeld()) {
@@ -479,7 +479,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                     return HANDLED;
 
                 case EVENT_RELEASE_WAKELOCK:
-                    if (!QUICKBOOT) {
+                    if (!INBOUND_SMS_HANDLER_QUICKBOOT) {
                         mWakeLock.release();    // decrement wakelock from previous entry to Idle
                         if (!mWakeLock.isHeld()) {
                             // wakelock should still be held until 3 seconds after we enter Idle
